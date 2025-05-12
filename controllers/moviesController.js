@@ -1,57 +1,85 @@
-const connection = require('../data/db')
-
-
-//mostra tutti gli elementi
+const connection = require('../data/db');
+const { url } = require('inspector');
+//operazioni CRUD
+//index
 function index(req, res) {
 
-    const sql = 'SELECT * FROM movies'
+    const sql = `
+                SELECT
+                    movies.*, ROUND(AVG(reviews.vote), 2) AS review_vote
+                FROM
+                    movies
+                LEFT JOIN
+                    reviews ON movies.id = reviews.movie_id
+                GROUP BY movies.id
+                `
 
     connection.query(sql, (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: 'film non trovati' })
-        } else {
-            res.json(results)
-        }
-    });
-};
 
-//mstra solo elemento desiderato
+        if (err) {
+            return res.status(500).json({
+                errorMessage: 'Database connection error'
+            })
+        }
+
+        res.json(results.map(result => ({
+            ...result,
+            image: 'http://127.0.0.1:1500/movies/' + result.image
+        })));
+    })
+};
+//show
 function show(req, res) {
 
-
-    const id = parseInt(req.params.id);
-
-    console.log('showing details for movie ' + id);
-
+    const { id } = req.params;
     const sql = `SELECT 
-movies.*, reviews.vote, reviews.text as comment
- FROM
-  movies
-  JOIN reviews ON reviews.movie_id = movies.id
- WHERE movies.id = ?
-`;
+                   *
+                FROM
+                    movies
+                WHERE
+                    id = ?
+                `
 
     connection.query(sql, [id], (err, results) => {
+
         if (err) {
-            return res.status(500).json({ error: 'film non trovato' })
-        } else {
-            res.json(results)
+            return res.status(500).json({
+                errorMessage: err.sqlMessage
+            })
         }
-    });
+
+        if (results.length === 0) {
+            return res.status(404).json({
+                errorMessage: 'No records found',
+                id
+            })
+        }
+
+        const currentMovie = results[0];
+
+        const movie = {
+            ...currentMovie,
+            image: 'http://127.0.0.1:1500/movies/' + currentMovie.image
+        }
+
+        const sql = `SELECT 
+                        *
+                    FROM
+                        reviews
+                    WHERE
+                        movie_id = ?
+                    `
+
+        connection.query(sql, [id], (err, results) => {
+            if (err) {
+                console.log(err);
+            }
+
+            movie.reviews = results;
+
+            res.json(movie);
+        })
+    })
 };
 
-
-module.exports = {
-    index,
-    show
-}
-
-
-// if (err) return res.status(500).json({ error: 'Film non tovato' });
-// res.json(results);
-
-
-
-// if (err) return res.status(500).json({ error: 'Database query failed' });
-//         if (results.length === 0) return res.status(404).json({ error: 'post not found' });
-//         res.json(results[0]);
+module.exports = { index, show };
