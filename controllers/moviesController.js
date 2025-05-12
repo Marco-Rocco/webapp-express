@@ -1,5 +1,4 @@
 const connection = require('../data/db');
-const { url } = require('inspector');
 //operazioni CRUD
 //index
 function index(req, res) {
@@ -24,7 +23,7 @@ function index(req, res) {
 
         res.json(results.map(result => ({
             ...result,
-            image: 'http://127.0.0.1:1500/movies/' + result.image
+            imagepath: process.env.IMAGE_PATH + result.image
         })));
     })
 };
@@ -59,7 +58,7 @@ function show(req, res) {
 
         const movie = {
             ...currentMovie,
-            image: 'http://127.0.0.1:1500/movies/' + currentMovie.image
+            imagepath: process.env.IMAGE_PATH + currentMovie.image
         }
 
         const sql = `SELECT 
