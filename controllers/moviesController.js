@@ -3,15 +3,21 @@ const connection = require('../data/db');
 //index
 function index(req, res) {
 
-    const sql = `
+    const { find } = req.query
+
+    let sql = `
                 SELECT
-                    movies.*, ROUND(AVG(reviews.vote), 2) AS review_vote
+                    movies.*, ROUND(AVG(reviews.vote), 2) AS average_vote
                 FROM
                     movies
                 LEFT JOIN
                     reviews ON movies.id = reviews.movie_id
-                GROUP BY movies.id
-                `
+                `;
+    if (find) {
+        sql += ` WHERE title like "%${find}%" or director like "%${find}%"`
+    }
+
+    sql += ` GROUP BY movies.ID`
 
     connection.query(sql, (err, results) => {
 
@@ -81,4 +87,12 @@ function show(req, res) {
     })
 };
 
-module.exports = { index, show };
+
+//post
+
+function post(req, res) {
+
+    res.json('review created')
+}
+
+module.exports = { index, show, post };
