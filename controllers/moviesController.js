@@ -91,8 +91,13 @@ function show(req, res) {
 //post
 
 function post(req, res) {
+    const { id } = req.params;
 
-    res.json('review created')
+    const { name, vote, text } = req.body
+
+
+    res.json(`review created to movie ${id}
+        ${name}, ${vote}, ${text},        `)
 }
 
 module.exports = { index, show, post };
