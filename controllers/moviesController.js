@@ -96,8 +96,15 @@ function post(req, res) {
     const { name, vote, text } = req.body
 
 
-    res.json(`review created to movie ${id}
-        ${name}, ${vote}, ${text},        `)
+    let sql = `INSERT INTO reviews (movie_id, name, vote, text) VALUES ( ?, ?, ?, ?)`;
+
+    connection.query(sql, [id, name, vote, text], (err) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ error: err });
+        }
+        res.status(200).json('Recensione creata con successo');
+    });
 }
 
 module.exports = { index, show, post };
