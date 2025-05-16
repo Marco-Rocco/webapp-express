@@ -1,4 +1,5 @@
 const connection = require('../data/db');
+const slugify = require('slugify');
 //operazioni CRUD
 //index
 function index(req, res) {
@@ -100,11 +101,36 @@ function post(req, res) {
 
     connection.query(sql, [id, name, vote, text], (err) => {
         if (err) {
-            console.error(err);
+
             return res.status(500).json({ error: err });
         }
         res.status(200).json('Recensione creata con successo');
     });
 }
 
-module.exports = { index, show, post };
+//store (for movie)
+function store(req, res) {
+
+    const { title, director, abstract } = req.body;
+
+    const sql = `
+    INSERT INTO movies (title, director, abstract) VALUES (?,?,?)
+    `
+
+    const slug = slugify(title, {
+        lower: true,
+        trim: true
+    })
+
+    connection.query(sql, [title, director, abstract], (err, results) => {
+        if (err) {
+            return res.status(500).json({
+                errorMessage: err.sqlMessage
+            })
+        }
+        res.status(201);
+        res.json({ message: 'Movie added' })
+    })
+};
+
+module.exports = { index, show, post, store };
